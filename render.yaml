@@ -1,0 +1,22 @@
+# Blueprint deploy ke Render (opsional).
+# Di Render: New > Blueprint > hubungkan repo ini.
+services:
+  - type: web
+    name: mowy-cs-ai
+    runtime: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false            # isi manual di dashboard Render (rahasia)
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mowy-db
+          property: connectionString
+
+databases:
+  - name: mowy-db
+    plan: free
