@@ -1,4 +1,5 @@
 require('dotenv').config();
+const fs = require('fs');
 const path = require('path');
 const express = require('express');
 const db = require('./src/db');
@@ -145,7 +146,24 @@ app.get('/api/leads', async (_req, res) => {
   }
 });
 
+// Buat tabel otomatis saat start (idempotent - CREATE TABLE IF NOT EXISTS).
+async function initDb() {
+  if (!process.env.DATABASE_URL) {
+    console.warn('[db] DATABASE_URL belum di-set - lewati pembuatan tabel.');
+    return;
+  }
+  try {
+    const sql = fs.readFileSync(path.join(__dirname, 'db', 'schema.sql'), 'utf8');
+    await db.query(sql);
+    console.log('[db] Tabel siap (dibuat bila belum ada).');
+  } catch (e) {
+    console.error('[db] Gagal menyiapkan tabel:', e.message);
+  }
+}
+
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`🚀 Mowy CS AI jalan di http://localhost:${PORT}  (model: ${MODEL})`);
+initDb().finally(() => {
+  app.listen(PORT, () => {
+    console.log(`🚀 Mowy CS AI jalan di http://localhost:${PORT}  (model: ${MODEL})`);
+  });
 });
